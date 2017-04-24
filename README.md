@@ -34,8 +34,8 @@ creatureFile.txt must be formatted as follows (look at goblin.txt for an example
 
 |swarm attack bonus|
 
-|swarm dice type| (must be of the format <numDice>d<diceShape>+<damageModifier>, 
-for example, 1d6+3, or 2d12+0, or 1d4-1)
+|swarm dice type| (must be of the format in the following examples: 
+1d6+3, or 2d12+0, or 1d4-1)
 
 |HP of individual in swarm|
 
