@@ -1,0 +1,5 @@
+Goblin Bowmen
++2
+1d6+2
+7
+10
