@@ -185,5 +185,3 @@ while True:
 		exit()
 	else:
 		print 'Invalid option selected\n'
-
-	
