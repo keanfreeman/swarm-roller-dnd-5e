@@ -14,10 +14,11 @@ print 'Hit Points per swarm individual? (examples: "7", "500")'
 print 'Number of members of swarm? (examples: "2", "100")'
 """
 class Swarm(object):
-	def __init__(self, name, attackBonus, damageDice, hitPoints, size):
+	def __init__(self, name, attackBonus, damageDice, averageDamage, hitPoints, size):
 		self.name = name
 		self.attackBonus = attackBonus
 		self.damageDice = damageDice
+		self.averageDamage = averageDamage
 		self.individualHP = hitPoints
 		self.size = size
 
@@ -56,6 +57,10 @@ def collectSwarmFromFile(fileName):
 		damageDice = fileList[2]
 		print 'Swarm dice are: ' + damageDice
 
+		averageDamage = 0
+		averageDamage = calcAverageDamage(damageDice)
+		print 'Swarm average damage is: ' + str(averageDamage)
+
 		hitPoints = 0
 		hitPoints += int(fileList[3])
 		print 'Hit Points per swarm individual: ' + str(hitPoints)
@@ -64,11 +69,16 @@ def collectSwarmFromFile(fileName):
 		size += int(fileList[4])
 		print 'Number of members of swarm: ' + str(size) + '\n'
 
-		return Swarm(name, attackBonus, damageDice, hitPoints, size)
+		return Swarm(name, attackBonus, damageDice, averageDamage, hitPoints, size)
+
+
 
 def swarmAttack(swarmIn):
 	print 'AC of target? (examples: "5", "20")'
 	targetAC = int(raw_input())
+
+	print 'Do you want to do average damage? (y/n)'
+	isAverageAttack = (raw_input() == 'y')
 
 	damage = 0
 	# dice info below for calculations
@@ -81,16 +91,23 @@ def swarmAttack(swarmIn):
 		
 		# critical hits always hit, and deal twice the damage dice
 		if (attackRoll - swarmIn.attackBonus) == 20:
-			dCharPosition = diceType.find('d')
-			numDice = int(diceType[:dCharPosition])
-			numDice *= 2
-			tempDiceType = str(numDice) + diceType[dCharPosition:]
-			rollTotal = dice.roll(tempDiceType + 't') + diceDamageModifier
-			damage += rollTotal
+			if isAverageAttack:
+				damage += ((swarmIn.averageDamage * 2) - diceDamageModifier)
+			else:
+				dCharPosition = diceType.find('d')
+				numDice = int(diceType[:dCharPosition])
+				numDice *= 2
+				tempDiceType = str(numDice) + diceType[dCharPosition:]
+				rollTotal = dice.roll(tempDiceType + 't') + diceDamageModifier
+				damage += rollTotal
 
 		elif attackRoll >= targetAC:
-			rollTotal = dice.roll(diceType + 't') + diceDamageModifier
-			damage += rollTotal
+			if isAverageAttack:
+				damage += swarmIn.averageDamage
+			else:
+				rollTotal = dice.roll(diceType + 't') + diceDamageModifier
+				damage += rollTotal
+
 	# TODO: calculating average damage as well for convenience
 	"""
 	numDice = diceType[:diceType.find('d')]
@@ -105,7 +122,17 @@ str(int((chanceOfHitting * averageDamageRoll) * swarmIn.currentNumMembers))
 	"""	
 
 	print 'The swarm deals ' + str(damage) + 'HP damage to the target!\n'
-		
+
+def calcAverageDamage(damageDice):
+	dCharPosition = damageDice.find('d')
+	endPos = damageDice.find('+')
+	diceTypeAndNum = damageDice[:endPos]
+	attackBonus = int(damageDice[endPos:])
+	maxVal = float(diceTypeAndNum[dCharPosition + 1:])
+	numDice = int(damageDice[:dCharPosition])
+	average = floor((maxVal + 1) / 2) * numDice
+	avgDmg = int(average) + attackBonus
+	return avgDmg
 
 def swarmTakesDamage(swarmIn):
 	print 'How much HP damage does the swarm take?'
