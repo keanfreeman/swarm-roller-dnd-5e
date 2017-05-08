@@ -169,21 +169,21 @@ if len(sys.argv) != 2:
 swarm1 = collectSwarmFromFile(sys.argv[1])
 
 while True:
-	optionsPrompt()    
+	optionsPrompt() 
 	input = raw_input()
 
 	if input.find('average') != -1:
-		if input.find('adv'):
+		if input.find('adv') != -1:
 			swarmAttack(swarm1, True, 1)
-		elif input.find('dis'):
+		elif input.find('dis') != -1:
 			swarmAttack(swarm1, True, 2)
 		else:
 			swarmAttack(swarm1, True, 0)
 
 	elif input.find('roll') != -1:
-		if input.find('adv'):
+		if input.find('adv') != -1:
 			swarmAttack(swarm1, False, 1)
-		elif input.find('dis'):
+		elif input.find('dis') != -1:
 			swarmAttack(swarm1, False, 2)
 		else:
 			swarmAttack(swarm1, False, 0)
