@@ -33,10 +33,10 @@ class Swarm(object):
 
 # function definitions
 def optionsPrompt():
-	print 'Input desired action:'
-	print '"1": the swarm attacks'
-	print '"2": the swarm takes damage'
-	print '"q": quit'
+	print 'Input command, type \'help\', or enter \'q\' to exit'
+def helpPage():
+	print 'Available commands: \n'
+	print '<roll/average/damage>  <adv/dis>'
 
 def collectSwarmFromFile(fileName):
 	print 'Collecting swarm info from ' + fileName + ':'
@@ -73,20 +73,15 @@ def collectSwarmFromFile(fileName):
 
 
 
-def swarmAttack(swarmIn):
+def swarmAttack(swarmIn, isAverageAttack, vantage):
 	print 'AC of target? (examples: "5", "20")'
 	targetAC = int(raw_input())
 
-	print 'Do you want to do average damage? (y/n)'
-	isAverageAttack = (raw_input() == 'y')
-
 	isAdvantaged = False
 	isDisadvantaged = False
-	print 'Is the swarm advantaged or disadvantaged? (adv/dis/no)'
-	input = raw_input()
-	if (input == 'adv'):
+	if vantage == 1:
 		isAdvantaged = True
-	elif (input == 'dis'):
+	elif vantage == 2:
 		isDisadvantaged = True
 
 	damage = 0
@@ -176,10 +171,29 @@ swarm1 = collectSwarmFromFile(sys.argv[1])
 while True:
 	optionsPrompt()    
 	input = raw_input()
-	if input == '1':
-		swarmAttack(swarm1)
-	elif input == '2':
+
+	if input.find('average') != -1:
+		if input.find('adv'):
+			swarmAttack(swarm1, True, 1)
+		elif input.find('dis'):
+			swarmAttack(swarm1, True, 2)
+		else:
+			swarmAttack(swarm1, True, 0)
+
+	elif input.find('roll') != -1:
+		if input.find('adv'):
+			swarmAttack(swarm1, False, 1)
+		elif input.find('dis'):
+			swarmAttack(swarm1, False, 2)
+		else:
+			swarmAttack(swarm1, False, 0)
+
+	elif input.find('damage') != -1:
 		swarmTakesDamage(swarm1)
+	
+	elif (input == 'help'):
+		helpPage()
+			
 	elif (input == 'q'):
 		print 'Program terminating'
 		exit()
