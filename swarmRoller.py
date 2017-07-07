@@ -1,11 +1,11 @@
-# Kean Freeman 2017
+## Kean Freeman 2017
 
 import pdb
 import dice
 import sys
 from math import floor
 
-# class definitions
+## class definitions
 """
 print 'Swarm name? (examples: "Goblin", "Druid")'
 print 'Swarm attack bonus? (examples: "+5", "-1", "+0")'
@@ -14,11 +14,10 @@ print 'Hit Points per swarm individual? (examples: "7", "500")'
 print 'Number of members of swarm? (examples: "2", "100")'
 """
 class Swarm(object):
-	def __init__(self, name, attackBonus, damageDice, averageDamage, hitPoints, size):
+	def __init__(self, name, attackBonus, damageDice, hitPoints, size):
 		self.name = name
 		self.attackBonus = attackBonus
 		self.damageDice = damageDice
-		self.averageDamage = averageDamage
 		self.individualHP = hitPoints
 		self.size = size
 
@@ -31,9 +30,15 @@ class Swarm(object):
 		numDead = floor((self.totalHP - self.currentHP) / self.individualHP)
 		self.currentNumMembers =self.size - int(numDead)
 
-# function definitions
+## function definitions
 def optionsPrompt():
-	print 'Input command, type \'help\', or enter \'q\' to exit'
+	print 'Input desired action:'
+	print '"1": the swarm attacks'
+	print '"2": the swarm takes damage'
+	print '"3": impose advantage/disadvantage on next attack'
+	print '"4": change swarm size manually'
+	print '"q": quit'
+
 def helpPage():
 	print 'Available commands: \n'
 	print '<roll/average/damage>  <adv/dis>'
@@ -57,10 +62,6 @@ def collectSwarmFromFile(fileName):
 		damageDice = fileList[2]
 		print 'Swarm dice are: ' + damageDice
 
-		averageDamage = 0
-		averageDamage = calcAverageDamage(damageDice)
-		print 'Swarm average damage is: ' + str(averageDamage)
-
 		hitPoints = 0
 		hitPoints += int(fileList[3])
 		print 'Hit Points per swarm individual: ' + str(hitPoints)
@@ -69,20 +70,16 @@ def collectSwarmFromFile(fileName):
 		size += int(fileList[4])
 		print 'Number of members of swarm: ' + str(size) + '\n'
 
-		return Swarm(name, attackBonus, damageDice, averageDamage, hitPoints, size)
+		return Swarm(name, attackBonus, damageDice, hitPoints, size)
 
 
 
-def swarmAttack(swarmIn, isAverageAttack, vantage):
+def swarmAttack(swarmIn, advantage, disadvantage):
 	print 'AC of target? (examples: "5", "20")'
 	targetAC = int(raw_input())
 
-	isAdvantaged = False
-	isDisadvantaged = False
-	if vantage == 1:
-		isAdvantaged = True
-	elif vantage == 2:
-		isDisadvantaged = True
+	isAdvantaged = advantage
+	isDisadvantaged = disadvantage
 
 	damage = 0
 	# dice info below for calculations
@@ -105,51 +102,54 @@ def swarmAttack(swarmIn, isAverageAttack, vantage):
 		
 		# critical hits always hit, and deal twice the damage dice
 		if (attackRoll - swarmIn.attackBonus) == 20:
-			if isAverageAttack:
-				damage += ((swarmIn.averageDamage * 2) - diceDamageModifier)
-			else:
-				dCharPosition = diceType.find('d')
-				numDice = int(diceType[:dCharPosition])
-				numDice *= 2
-				tempDiceType = str(numDice) + diceType[dCharPosition:]
-				rollTotal = dice.roll(tempDiceType + 't') + diceDamageModifier
-				damage += rollTotal
+			dCharPosition = diceType.find('d')
+			numDice = int(diceType[:dCharPosition])
+			numDice *= 2
+			tempDiceType = str(numDice) + diceType[dCharPosition:]
+			rollTotal = dice.roll(tempDiceType + 't') + diceDamageModifier
+			damage += rollTotal
 
 		elif attackRoll >= targetAC:
-			if isAverageAttack:
-				damage += swarmIn.averageDamage
-			else:
-				rollTotal = dice.roll(diceType + 't') + diceDamageModifier
-				damage += rollTotal
-		
-
-	# TODO: calculating average damage as well for convenience
-	"""
-	numDice = diceType[:diceType.find('d')]
-	diceShape = diceType[diceType.find('d') + 1:]
-	averageDamageRoll = float(int(diceShape)/ float(2)) * int(numDice) + \
-diceDamageModifier
-	numberNeededToHit = targetAC - swarmIn.attackBonus
-	chanceOfHitting = float((20 - numberNeededToHit) / float(20))
+			rollTotal = dice.roll(diceType + 't') + diceDamageModifier
+			damage += rollTotal
 	
-	print 'Approximate average damage: ' + \
-str(int((chanceOfHitting * averageDamageRoll) * swarmIn.currentNumMembers))
-	"""	
 	if damage == 0:
 		print 'The attack missed!\n'
 	else:
 		print 'The swarm deals ' + str(damage) + 'HP damage to the target!\n'
+		print 'Average damage: ' + str(calcAverageDamage(swarmIn.damageDice, targetAC))
 
-def calcAverageDamage(damageDice):
+# returns average damage dealt, rounded down
+def calcAverageDamage(damageDice, enemyAC):
 	dCharPosition = damageDice.find('d')
 	endPos = damageDice.find('+')
 	diceTypeAndNum = damageDice[:endPos]
 	attackBonus = int(damageDice[endPos:])
-	maxVal = float(diceTypeAndNum[dCharPosition + 1:])
+	
+	oddsOfHitting = float(0)
+	oddsThatHitWasCritical = 0
+	if enemyAC - swarm1.attackBonus >= 20:
+		oddsOfHitting = 1/(float(20))
+		oddsThatHitWasCritical = 1
+	else:
+		marginOfHitting = 20 - (enemyAC - swarm1.attackBonus)
+		if marginOfHitting >= 19:
+			oddsOfHitting = 1
+			marginOfHitting = 19
+		else:
+			oddsOfHitting = 1/float(20) + (marginOfHitting / float(20))
+		oddsThatHitWasCritical = 1/float(1 + marginOfHitting)
+	
+	diceType = float(diceTypeAndNum[dCharPosition + 1:])
 	numDice = int(damageDice[:dCharPosition])
-	average = floor((maxVal + 1) / 2) * numDice
-	avgDmg = int(average) + attackBonus
-	return avgDmg
+	averageDamage = (.5 + (diceType / 2)) * numDice + attackBonus
+	averageCriticalDamage = (.5 + (diceType / 2)) * numDice * 2 + attackBonus
+	
+	overallSwarmDamage = swarm1.currentNumMembers * oddsOfHitting * \
+(oddsThatHitWasCritical * averageCriticalDamage + \
+(1 - oddsThatHitWasCritical) * (averageDamage))
+
+	return int(overallSwarmDamage)
 
 def swarmTakesDamage(swarmIn):
 	print 'How much HP damage does the swarm take?'
@@ -162,7 +162,7 @@ def swarmTakesDamage(swarmIn):
 ' HP out of ' + str(swarmIn.totalHP) + 'HP!\nAlso, the swarm has ' + \
 str(swarmIn.currentNumMembers) + ' member(s) remaining!\n'
 
-# main
+## main
 if len(sys.argv) != 2:
 	print 'Error, need to input monster file name as argument'
 	exit(1)
@@ -171,28 +171,15 @@ swarm1 = collectSwarmFromFile(sys.argv[1])
 while True:
 	optionsPrompt() 
 	input = raw_input()
-
-	if input.find('average') != -1:
-		if input.find('adv') != -1:
-			swarmAttack(swarm1, True, 1)
-		elif input.find('dis') != -1:
-			swarmAttack(swarm1, True, 2)
-		else:
-			swarmAttack(swarm1, True, 0)
-
-	elif input.find('roll') != -1:
-		if input.find('adv') != -1:
-			swarmAttack(swarm1, False, 1)
-		elif input.find('dis') != -1:
-			swarmAttack(swarm1, False, 2)
-		else:
-			swarmAttack(swarm1, False, 0)
-
-	elif input.find('damage') != -1:
-		swarmTakesDamage(swarm1)
 	
-	elif (input == 'help'):
-		helpPage()
+	advantage = False
+	disadvantage = False
+	
+	if input == '1':
+		swarmAttack(swarm1, advantage, disadvantage)
+
+	elif input == '2':
+		swarmTakesDamage(swarm1)
 			
 	elif (input == 'q'):
 		print 'Program terminating'
